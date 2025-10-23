@@ -4,14 +4,17 @@ WORKDIR /app
 
 # Kopieer de solution en projectbestanden
 COPY *.sln .
+COPY Meos/*.csproj ./Meos/
 COPY Meos_API/*.csproj ./Meos_API/
 COPY Meos_Shared/*.csproj ./Meos_Shared/
 
-# Restore dependencies
-RUN dotnet restore
+# Restore dependencies via de solution
+RUN dotnet restore Meos.sln
 
-# Kopieer alles en build de app
+# Kopieer alle code
 COPY . .
+
+# Build en publish API (hosted Blazor WASM)
 WORKDIR /app/Meos_API
 RUN dotnet publish -c Release -o out
 
