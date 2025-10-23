@@ -1,0 +1,115 @@
+﻿@using Meos.Pages
+@using Meos_Shared
+@using MudBlazor
+@inject HttpClient Http
+@inject NavigationManager navManager
+@inject ISnackbar Snackbar
+
+<MudDialog MaxWidth="MaxWidth.Large">
+    <TitleContent>
+        <MudText Align="Align.Center" Typo="Typo.h6">Collega Toevoegen</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudGrid Spacing="3">
+            @if (users == null)
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Gebruikers worden geladen...
+                </MudText>
+            }
+            else if (!users.Any())
+            {
+                <MudText Typo="Typo.body2" Align="Align.Center">
+                    Geen gebruikers gevonden.
+                </MudText>
+            }
+            else
+            {
+                @foreach (var user in users)
+                {
+                    <MudItem xs="12" sm="8">
+                        <MudCard 
+                            Outlined="true"
+                            Class="@GetCardClass(user)"
+                            @onclick="() => ToggleUserSelection(user)">
+                            
+                            <MudCardContent>
+                                <MudText Typo="Typo.body2" Align="Align.Center"><b>@user.Name</b></MudText>
+                                <MudText Class="mt-3" Typo="Typo.body2" Align="Align.Center">
+                                    <b>Rang:</b> @user.Rang
+                                </MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">Annuleren</MudButton>
+        <MudButton Color="Color.Tertiary" OnClick="AddUsers">Collega's Toevoegen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public int incidentid { get; set; }
+    [Parameter] public string? identifier { get; set; }
+    [Parameter] public IncidentClass? Incident { get; set; }
+    [Parameter] public UsersClass NewUsers { get; set; } = new();
+
+    private List<UsersClass>? users;
+    private HashSet<int> selectedUsers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await Http.GetFromJsonAsync<List<UsersClass>>("api/users");
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+  private async Task AddUsers()
+    {
+        if (!selectedUsers.Any())
+        {
+            Snackbar.Add("Selecteer minimaal één gebruiker.", Severity.Error);
+            return;
+        }
+
+        var response = await Http.PostAsJsonAsync(
+            $"/api/persons/{identifier}/incidents/{incidentid}/users",
+            selectedUsers.ToList()
+        );
+
+        if (response.IsSuccessStatusCode)
+        {
+            MudDialog.Close(selectedUsers.ToList());
+        }
+        else
+        {
+            Snackbar.Add($"Fout bij toevoegen: {response.StatusCode}", Severity.Error);
+        }
+    }
+
+
+    private void ToggleUserSelection(UsersClass user)
+    {
+        if (selectedUsers.Contains(user.Id))
+            selectedUsers.Remove(user.Id);
+        else
+            selectedUsers.Add(user.Id);
+    }
+
+    private string GetCardClass(UsersClass user)
+        => selectedUsers.Contains(user.Id)
+            ? "relative cursor-pointer hover:shadow-lg transition-shadow border-2 border-primary"
+            : "relative cursor-pointer hover:shadow-lg transition-shadow";
+
+    private void ShowErrorSnackbar(string message)
+        => Snackbar.Add(message, Severity.Error);
+
+    private void ShowSuccesSnackbar(string message)
+        => Snackbar.Add(message, Severity.Success);
+}

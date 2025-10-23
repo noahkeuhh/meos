@@ -1,0 +1,83 @@
+﻿@using Meos_Shared
+@inject HttpClient Http
+@inject NavigationManager navManager
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Align="Align.Center" Typo="Typo.h6">Straf Toevoegen</MudText>
+    </TitleContent>
+    <DialogContent>
+         <MudSelect T="string" Label="Type straf" @bind-Value="_selectedType">
+            <MudSelectItem Value="@("Gevangenisstraf")">Gevangenisstraf</MudSelectItem>
+            <MudSelectItem Value="@("Taakstraf")">Taakstraf</MudSelectItem>
+        </MudSelect>
+        <MudTextField class="mt-3" @bind-Value="newSentence.Amount" Label="Aantal"/>
+        <MudTextField class="mt-3" @bind-Value="newSentence.Fine" Label="Boete"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Size="Size.Small" Color="Color.Tertiary" OnClick="AddSentence">Incident Toevoegen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] private MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public int incidentid { get; set; }
+    [Parameter] public string? identifier { get; set; }
+    [Parameter] public SentenceClass newSentence { get; set; } = new();
+    private string _selectedType;
+    
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task AddSentence()
+    {
+        try
+        {
+            newSentence.Type = _selectedType;
+            newSentence.IncidentId = incidentid;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/persons/{identifier}/incidents/{incidentid}/sentence")
+            {
+                Content = JsonContent.Create(newSentence)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+               var sentence = await response.Content.ReadFromJsonAsync<SentenceClass>();
+               MudDialog.Close();
+
+            if (sentence != null)
+            {
+                ShowSuccesSnackbar("de strafbepaling is succesvol toegevoegd");
+                //navManager.NavigateTo($"/incidentview/{identifier}/{incidentid}");
+            }
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen straf: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+}

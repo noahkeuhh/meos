@@ -1,0 +1,11 @@
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\Meos_Shared.deps.json
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\Meos_Shared.dll
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\Meos_Shared.pdb
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.AssemblyInfoInputs.cache
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.AssemblyInfo.cs
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.csproj.CoreCompileInputs.cache
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.dll
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\refint\Meos_Shared.dll
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\Meos_Shared.pdb
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\obj\Release\net9.0\ref\Meos_Shared.dll

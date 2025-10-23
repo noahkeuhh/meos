@@ -1,0 +1,99 @@
+﻿@page "/person"
+@using Meos_Shared
+@inject HttpClient Http
+@inject NavigationManager navManager
+@inject ISnackbar Snackbar
+
+<MudContainer Class="mt-9">
+    <MudCard Outlined="true">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Align="Align.Center"> Burgers Overzicht</MudText>
+            <MudText Typo="Typo.h6" Align="Align.Center">Bekijk burgers via BSN, voornaam, achternaam, geboortedatum, baan of vingerafdruk.</MudText>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<MudContainer Class="mt-9">
+    <MudCard Outlined="true">
+        <MudCardContent>
+            <MudTextField @bind-Value="searchQuery" T="string" Label="Zoek op BSN, naam, voornaam etc" Variant="Variant.Outlined"></MudTextField>
+            <MudButton Class="mt-3" Color="Color.Primary" @onclick="Search">Zoeken</MudButton>
+            <MudButton Class="mt-3" Color="Color.Tertiary" Variant="Variant.Outlined" @onclick="EmptySearchbar">Reset</MudButton>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<MudContainer Class="mt-9">
+    @if (persons == null)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true"></MudProgressCircular>
+    }
+    else
+    {
+        <MudGrid>
+            @foreach (var PersonClass in persons)
+            {
+                <MudItem  xs="12" sm="6" md="4">
+                    <MudCard Class="hover-card" Style="cursor:pointer" @onclick="() => ViewPerson(PersonClass.Identifier)" Outlined="true">
+                        <MudText class="mt-3" Typo="Typo.h6" Align="Align.Center">@PersonClass.FirstName @PersonClass.LastName</MudText>
+                        <MudText class="mt-3" Typo="Typo.body1" Align="Align.Center"><b>BSN:</b> @PersonClass.Bsn</MudText>
+                        <MudText class="mt-3" Typo="Typo.body1" Align="Align.Center"><b>Geboortedatum:</b> @PersonClass.DateOfBirth</MudText>
+                        <MudText class="mt-3" Typo="Typo.body1" Align="Align.Center"><b>Job:</b> @PersonClass.Job</MudText>
+                    </MudCard>
+                </MudItem>
+            }
+        
+        </MudGrid>
+    }
+
+    
+</MudContainer>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+    transform: scale(1.05); 
+    box-shadow: 0px 12px 24px rgba(0,0,0,0.2); 
+}
+</style
+
+@code {
+    private List<PersonClass>? persons;
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        persons = await Http.GetFromJsonAsync<List<PersonClass>>("api/persons");
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            ShowErrorSnackbar("Foute invoer. Leeg zoek veld");
+        }
+        else
+        {
+        persons = await Http.GetFromJsonAsync<List<PersonClass>>($"api/persons/search?query={searchQuery}");
+        }
+    }
+
+    private void ViewPerson(string identifier)
+    {
+        navManager.NavigateTo($"/personview/{identifier}");
+    }
+
+    private void EmptySearchbar()
+    {
+        searchQuery = "";
+        navManager.NavigateTo(navManager.Uri, forceLoad: true);
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+}

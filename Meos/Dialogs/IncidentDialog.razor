@@ -1,0 +1,98 @@
+﻿@using Meos.Pages
+@using Meos_Shared
+@using MudBlazor;
+@using System.Threading.Tasks
+@inject HttpClient Http
+@inject NavigationManager navManager
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudText Align="Align.Center" Typo="Typo.h6">Incident Toevoegen</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField class="mt-3" Value="@($"{Person.FirstName} {Person.LastName}")"  Label="Persoon" ReadOnly="true"/>
+        <MudTextField class="mt-3" @bind-Value="NewIncident.Artikelen" Label="Artikel(en)"/>
+        <MudTextField class="mt-3" @bind-Value="NewIncident.IngenomenGoederen" Label="Ingenomen Goederen"/>
+        <MudText class="mt-3">Rechten voorgelezen?</MudText>
+        <MudRadioGroup @bind-Value="Rechten">
+            <MudRadio Value="true" Dense="true">Ja</MudRadio>
+            <MudRadio Value="false" Dense="false">Nee</MudRadio>
+        </MudRadioGroup>
+        <MudTextField class="mt-3" @bind-Value="NewIncident.Agent" Label="Agent"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Size="Size.Small" Color="Color.Tertiary" OnClick="() => AddIncident(NewIncident.IncidentId)">Incident Toevoegen</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public IncidentClass NewIncident { get; set; } = new IncidentClass();
+    [Parameter]
+    public string? identifier {get; set; }
+    [Parameter]
+    public PersonClass? Person {get; set; }
+    private bool Rechten {get; set; } = false;
+
+    protected override void OnInitialized()
+    {
+        if (NewIncident.Datum == default)
+        {
+            NewIncident.Datum = DateTime.Now;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task AddIncident(int incidentId)
+    {
+        try
+        {
+            NewIncident.Identifier = identifier;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/persons/{identifier}/incidents")
+            {
+                Content = JsonContent.Create(NewIncident)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+               var incident = await response.Content.ReadFromJsonAsync<IncidentClass>();
+
+            if (incident != null)
+            {
+                ShowSuccesSnackbar("Het incident is succesvol toegevoegd");
+                navManager.NavigateTo($"/incidentview/{identifier}/{incident.IncidentId}");
+            }
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen arrestatiebevel: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+}

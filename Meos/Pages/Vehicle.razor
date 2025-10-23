@@ -1,0 +1,97 @@
+﻿@page "/vehicle"
+@using Meos_Shared
+@using System.ComponentModel.DataAnnotations.Schema
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager navManager
+
+<MudContainer Class="mt-9">
+    <MudCard Outlined="true">
+        <MudCardContent>
+            <MudText Typo="Typo.h5" Align="Align.Center">Voertuigen Overzicht</MudText>
+            <MudText Typo="Typo.h6" Align="Align.Center">Bekijk voertuigen via nummerplaat</MudText>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<MudContainer Class="mt-9">
+    <MudCard Outlined="true">
+        <MudCardContent>
+            <MudTextField @bind-Value="searchQuery" T="string" Label="Zoek op nummerplaat" Variant="Variant.Outlined"></MudTextField>
+            <MudButton Class="mt-3" Color="Color.Primary" @onclick="Search">Zoeken</MudButton>
+            <MudButton Class="mt-3" Color="Color.Tertiary" Variant="Variant.Outlined" @onclick="EmptySearchbar">Reset</MudButton>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+<MudContainer class="mt-9">
+        @if (vehicles == null)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true"></MudProgressCircular>
+        }
+        else
+        {
+            <MudGrid>
+                @foreach (var VehicleClass in vehicles)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudCard Class="hover-card" Outlined="true" @onclick="() => ViewVehicle(VehicleClass.Plate)">
+                            <MudCardContent>
+                                <MudText Typo="Typo.h6" Align="Align.Center">Voertuig</MudText>
+                                <MudText class="mt-3" Typo="Typo.body1" Align="Align.Center">Nummerplaat: @VehicleClass.Plate</MudText>
+                         </MudCardContent>
+                        </MudCard>
+                   </MudItem>
+                }
+          </MudGrid>
+        }
+</MudContainer>
+
+<style>
+.hover-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-card:hover {
+    transform: scale(1.05); 
+    box-shadow: 0px 12px 24px rgba(0,0,0,0.2); 
+}
+</style
+
+@code {
+    private List<VehicleClass>? vehicles;
+    private string searchQuery = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        vehicles = await Http.GetFromJsonAsync<List<VehicleClass>>("/api/vehicles");
+    }
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(searchQuery))
+        {
+            ShowErrorSnackbar("Foute invoer. Leeg zoek veld");
+        }
+        else
+        {
+            vehicles = await Http.GetFromJsonAsync<List<VehicleClass>>($"api/vehicles/search?query={searchQuery}");
+        }
+    }
+
+    private void ViewVehicle(string plate)
+    {
+        navManager.NavigateTo($"/vehicleview/{plate}");
+    }
+
+    private void EmptySearchbar()
+    {
+        searchQuery = "";
+        navManager.NavigateTo(navManager.Uri, forceLoad: true);
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+}

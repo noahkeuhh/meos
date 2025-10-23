@@ -1,0 +1,67 @@
+@page "/login"
+@using System.Net
+@using Meos.Authentication
+@using Meos_Shared
+@using Microsoft.AspNetCore.Components.Authorization
+@inject HttpClient httpClient
+@inject IJSRuntime js
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager navManager
+
+@inject ISnackbar Snackbar
+
+<MudGrid Justify="Justify.Center" AlignItems="AlignItems.Center">
+    <MudItem xs="12" sm="7" md="4">
+        <MudCard Outlined="true" Class="pa-6" Style="text-align:center;">
+            <MudCardContent>
+                <MudIcon Icon="@Icons.Material.Filled.Person" Title="Person" 
+                         Style="font-size: 4rem;" Class="mb-4" />
+
+                <MudTextField T="string" Label="Gebruikersnaam" 
+                              @bind-Value="loginRequest.UserName" Class="mt-3" />
+
+                <MudTextField T="string" Label="Wachtwoord" 
+                              @bind-Value="loginRequest.Password" 
+                              InputType="InputType.Password" Class="mt-3" />
+            </MudCardContent>
+
+            <MudCardActions Class="justify-end">
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" @onclick="Authenticate">
+                    Log In
+                </MudButton>
+            </MudCardActions>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private LoginRequest loginRequest = new LoginRequest();
+    private string? errorMessage;
+
+    private async Task Authenticate()
+    {
+        errorMessage = null;
+        var loginResponse = await httpClient.PostAsJsonAsync<LoginRequest>("api/Account/Login", loginRequest);
+
+        if (loginResponse.IsSuccessStatusCode)
+        {
+            var userSession = await loginResponse.Content.ReadFromJsonAsync<UserSession>();
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            await customAuthStateProvider.UpdateAuthenticationState(userSession);
+            navManager.NavigateTo("/home", true);
+        }
+        else if (loginResponse.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            ShowErrorSnackbar("Gebruikersnaam of wachtwoord is onjuist.");
+        }
+        else
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden tijdens het inloggen.");
+        }
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+}

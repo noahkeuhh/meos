@@ -1,0 +1,88 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.MudDebugAnalyzer = 
+build_property.MudAllowedAttributePattern = 
+build_property.MudIllegalParameters = 
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = Meos
+build_property.RootNamespace = Meos
+build_property.ProjectDir = C:\Users\noahb\OneDrive\Meos\Meos\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\noahb\OneDrive\Meos\Meos
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Dialogs/ArrestWarrantDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = RGlhbG9nc1xBcnJlc3RXYXJyYW50RGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Dialogs/IncidentDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = RGlhbG9nc1xJbmNpZGVudERpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Dialogs/SentenceDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = RGlhbG9nc1xTZW50ZW5jZURpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Dialogs/UsersDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = RGlhbG9nc1xVc2Vyc0RpYWxvZy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/IncidentView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5jaWRlbnRWaWV3LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/Person.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/PersonView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVyc29uVmlldy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/Vehicle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Pages/VehicleView.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVmVoaWNsZVZpZXcucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-byqx2eu22w
+
+[C:/Users/noahb/OneDrive/Meos/Meos/Layout/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-9bb5ctffiu

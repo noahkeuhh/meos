@@ -1,0 +1,140 @@
+﻿@page "/vehicleview/{plate}"
+@using Meos.Authentication
+@using Meos_Shared
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager navManager;
+
+@if (isLoading)
+{
+    <MudProgressCircular Color="Color.Primary" Indeterminate="true"></MudProgressCircular>
+}
+else if (notFound)
+{
+    <MudText Typo="Typo.h6">Persoon niet gevonden.</MudText>
+    <MudButton OnClick="@(() => navManager.NavigateTo("/vehicle"))">Terug</MudButton>
+}
+else if (vehicle != null)
+{
+    <MudContainer class="mt-9">
+        <MudCard Outlined="true">
+        <div class="d-flex justify-center">
+            <MudLink Underline="Underline.Always" Typo="Typo.h6" Href="@($"/personview/{vehicle.Person?.Identifier}")">@vehicle.Person?.FirstName @vehicle.Person?.LastName</MudLink>
+        </div>
+        </MudCard>
+    </MudContainer>
+
+    <MudContainer class="mt-9">
+        <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText class="mt-3" Align="Align.Center" Typo="Typo.h6">Voertuig Informatie</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Eigenaar:</b> @vehicle.Person?.FirstName @vehicle.Person?.LastName</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Nummerplaat:</b> @vehicle.Plate</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudText class="mt-3" Align="Align.Center" Typo="Typo.h6">Wok Status</MudText>
+                </MudCard>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText class="mt-3" Align="Align.Center" Typo="Typo.h6">Notities</MudText>
+                        <MudTextField @bind-Value="NewNote.Note" Class="mt-3" T="string" Label="Notitie" Lines="6" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                        <MudButton Class="mt-3" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Tertiary" OnClick="AddNote">Notitie Toevoegen</MudButton>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter]
+    public string? plate {get ; set; }
+    private VehicleClass? vehicle;
+    private VehicleNoteClass NewNote { get; set; } = new VehicleNoteClass();
+    private List<VehicleNoteClass> notes;
+    private bool isLoading;
+    private bool notFound;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        notFound = false;
+
+        try
+        {
+            vehicle = await Http.GetFromJsonAsync<VehicleClass>($"api/vehicles/{plate}");
+            notes = await Http.GetFromJsonAsync<List<VehicleNoteClass>>($"/api/vehicles/{plate}/notes");
+            if (notes != null && notes.Any())
+            {
+                NewNote.Note = notes.First().Note;
+            }
+            if (vehicle == null)
+            {
+                notFound = true;
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            notFound = true;
+            ShowErrorSnackbar("Persoon niet gevonden.");
+            return;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+
+    private async Task AddNote()
+    {
+        if (string.IsNullOrWhiteSpace(NewNote.Note))
+        {
+            ShowErrorSnackbar("Text veld is leeg");
+            return;
+        }
+
+        try
+        {
+            NewNote.Plate = plate;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/vehicles/{plate}/notes")
+            {
+                Content = JsonContent.Create(NewNote)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowSuccesSnackbar("De notitie is succesvol toegevoegd");
+                navManager.NavigateTo(navManager.Uri, forceLoad: true );
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen notitie: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+        
+    }
+}

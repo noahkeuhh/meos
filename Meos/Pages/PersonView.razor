@@ -1,0 +1,362 @@
+﻿@page "/personview/{identifier}"
+@using Meos.Authentication
+@using Meos.Dialogs
+@using Meos_Shared
+@using MudBlazor.Charts
+
+@inject HttpClient Http;
+@inject ISnackbar Snackbar
+@inject NavigationManager navManager
+@inject IDialogService DialogService 
+
+@if (arrestWarrants != null && arrestWarrants.Any())
+    {
+            <MudContainer class="mt-9">
+                <MudCard Class="animated-red-card">
+                    <MudText class="mt-4" Typo="Typo.h6" Align="Align.Center">
+                        Let op! Dit persoon heeft een openstaand arrestatiebevel!
+                    </MudText>
+                </MudCard>
+            </MudContainer>
+    }
+
+<MudContainer class="mt-9">
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+
+        <MudGrid>
+            <MudItem  xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText Align="Align.Center" Typo="Typo.h6">Persoonlijke Informatie</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Voornaam:</b> @person.FirstName</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Achternaam:</b> @person.LastName</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>BSN:</b> @person.Bsn</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Geboortedatum:</b> @person.DateOfBirth</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Job:</b> @person.Job</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Licenses:</b></MudText>
+                        @if (person.Licenses?.Any() ?? false)
+                        {
+                            <MudStack Row="true" Spacing="1">
+                                @foreach (var license in person.Licenses)
+                                {
+                                    <MudChip T="string" Size="Size.Small"  Variant="Variant.Outlined">@license.Type</MudChip>
+                                }
+                            </MudStack>
+                        }  
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem  xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText Align="Align.Center" Typo="Typo.h6">Boetes</MudText>
+                        <MudText Class="mt-3" Typo="Typo.body2"><b>Openstaande Boetes:</b> €@totalFinesAmount</MudText>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            <MudItem  xs="12" sm="6" md="4">
+                <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText Align="Align.Center" Typo="Typo.h6">Arrestatiebevelen</MudText>
+                        @if (arrestWarrants == null || !arrestWarrants.Any())
+                        {
+                            <MudText Class="mt-3" Typo="Typo.body2">Geen actief arrestatiebevel</MudText>
+                        }
+                        else
+                        {
+                            foreach (var arrestWarrant in arrestWarrants)
+                            {
+                                <MudPaper Class="pa-3 mt-3 hover-card" Outlined="true">
+                                    <MudText Typo="Typo.body2">
+                                    <b>Datum:</b> @arrestWarrant.Date.ToShortDateString()<br />
+                                    <b>Agent:</b> @arrestWarrant.Agent<br />
+                                    </MudText>
+                                <MudButton Class="mt-3" Variant="Variant.Outlined" Color="Color.Tertiary" Size="Size.Small" OnClick="@(() => ViewArrestWarrant(arrestWarrant.Id))">
+                                    Bekijk Details
+                                </MudButton>
+                                </MudPaper>
+                            }
+                        }     
+                        <MudStack Row="true" Justify="Justify.FlexEnd">                   
+                            <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@((e) => AddArrestWarrant(NewArrestWarrant))">Arrestatiebevel Toevoegen</MudButton>
+                        </MudStack>                    
+                    </MudCardContent>
+               </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+<MudContainer class="mt-9">
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            <MudCard Class="p-4" Outlined="true">
+                    <MudText Typo="Typo.h6" Align="Align.Center">Incidenten</MudText>
+                    <MudCard Class="mt-3" style="margin-bottom: 20px">
+                        <MudCardContent>
+                            <div class="d-flex justify-between align-center">
+                                <MudText Typo="Typo.body2" Class="text-left w-25"><b>Datum</b></MudText>
+                                <MudText Typo="Typo.body2" Class="text-center w-25"><b>Artikelen</b></MudText>
+                                <MudText Typo="Typo.body2" Class="text-center w-25"><b>Agent</b></MudText>
+                                <MudText Typo="Typo.body2" Align="Align.Right"><b>Status</b></MudText>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                        <MudGrid>
+                            @if (incidents != null)
+                            {       
+                                foreach (var IncidentClass in incidents)
+                                {
+                                    <MudItem xs="12" >
+                                        <MudCard Outlined="true" Class="mx-auto hover-card" @onclick="() => ViewIncident(IncidentClass.Identifier, IncidentClass.IncidentId)">
+                                            <MudCardContent>
+                                                <div class="d-flex justify-between align-center">
+                                                    <MudText Class="text-left w-25" Typo="Typo.body2">@IncidentClass.Datum.ToShortDateString()</MudText>
+                                                    <MudText Class="text-center w-25" Typo="Typo.body2">@IncidentClass.Artikelen</MudText>
+                                                    <MudText Class="text-center w-25" Typo="Typo.body2">@IncidentClass.Agent</MudText>
+                                                    <MudText Align="Align.Right" Typo="Typo.body2">@IncidentClass.Agent</MudText>
+                                                </div>
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                }
+                            }
+                        </MudGrid>
+                <MudStack Row="true" Justify="Justify.FlexEnd">                   
+                    <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="@((e) => AddIncident(NewIncident))">Incident Toevoegen</MudButton>
+                </MudStack>  
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudCard Outlined="true">
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Notities</MudText>
+                    <MudTextField @bind-Value="NewNote.Note" Class="mt-3" T="string" Label="Notitie" Lines="6" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                    <MudButton Class="mt-3" Variant="Variant.Outlined" Size="Size.Small" Color="Color.Tertiary" OnClick="AddNote">Notitie Toevoegen</MudButton>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+    
+</MudContainer>
+
+<MudContainer Class="mt-9">
+    <MudCard Class="p-4" Outlined="true">
+        <MudText Typo="Typo.h6" Align="Align.Center">Voertuigen</MudText>
+        <MudGrid Justify="Justify.Center" AlignItems="Align.Center" Spacing="3">
+            @if (vehicles != null)
+            {
+                foreach (var VehicleClass in vehicles)
+                {
+                    <MudItem xs="12" md="8">
+                        <MudCard Style="cursor:pointer" Outlined="true"@onclick="() => ViewVehicle(VehicleClass.Plate)" Class="mx-auto my-2 hover-card">
+                            <MudCardContent>
+                                <MudText class="mt-1" Typo="Typo.body2">Kentekenplaat: @VehicleClass.Plate</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                }   
+            }
+        </MudGrid>
+    </MudCard>
+</MudContainer>
+
+<style>
+@@keyframes pulse {
+  from { box-shadow: 0 0 10px rgba(229,57,53,0.6); }
+  to   { box-shadow: 0 0 25px rgba(229,57,53,0.9); }
+}
+
+.animated-red-card {
+  background: linear-gradient(135deg, #d32f2f, #e53935);
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  animation: pulse 2s infinite alternate;
+}
+
+
+.hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease; !important
+}
+
+.hover-card:hover {
+    transform: scale(1.05); 
+    box-shadow: 0px 12px 24px rgba(0,0,0,0.2); 
+}
+.custom-top-margin {
+    margin-top: 20px;
+}
+</style>
+
+
+@code {
+    [Parameter]
+    public string? identifier { get; set; }   
+    private PersonNoteClass NewNote { get; set; } = new PersonNoteClass();
+    private ArrestWarrantClass NewArrestWarrant {get; set; } = new ArrestWarrantClass();
+    private PersonClass? person;
+    private bool isLoading = true;
+    private int totalFinesAmount = 0;
+    private List<VehicleClass>? vehicles;
+    private List<PersonNoteClass>? notes;
+    private List<ArrestWarrantClass>?arrestWarrants;
+    private VehicleClass? vehicle;
+    private List<IncidentClass>? incidents;
+    private IncidentClass NewIncident {get; set;} = new IncidentClass();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            person = await Http.GetFromJsonAsync<PersonClass>($"api/persons/{identifier}");
+            vehicles = await Http.GetFromJsonAsync<List<VehicleClass>>($"api/persons/{identifier}/vehicles");
+            notes = await Http.GetFromJsonAsync<List<PersonNoteClass>>($"/api/persons/{identifier}/notes");
+            arrestWarrants = await Http.GetFromJsonAsync<List<ArrestWarrantClass>>($"/api/persons/{identifier}/arrestwarrants");
+            incidents = await Http.GetFromJsonAsync<List<IncidentClass>>($"/api/persons/{identifier}/incidents");
+
+            if (notes != null && notes.Any())
+            {
+                NewNote.Note = notes.First().Note;
+            }
+            if (person == null || vehicles == null) 
+            {
+                return; 
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            ShowErrorSnackbar("Persoon niet gevonden.");
+            return;
+        }   
+
+        try
+        {
+            var totalResult = await Http.GetFromJsonAsync<TotalFinesDto>($"api/persons/{identifier}/totalfines");
+            totalFinesAmount = totalResult?.TotalAmount ?? 0;
+        }
+        catch
+        {
+            totalFinesAmount = 0;
+            ShowErrorSnackbar("Kon totaal boetes niet ophalen.");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+
+    private async Task AddNote()
+    {
+        if (string.IsNullOrWhiteSpace(NewNote.Note))
+        {
+            ShowErrorSnackbar("Text veld is leeg");
+            return;
+        }
+
+        try
+        {
+            NewNote.Identifier = identifier;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/persons/{identifier}/notes")
+            {
+                Content = JsonContent.Create(NewNote)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowSuccesSnackbar("De notitie is succesvol toegevoegd");
+                //navManager.NavigateTo(navManager.Uri, forceLoad: true );
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen notitie: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+        
+    }
+
+    private void ViewVehicle(string plate)
+    {
+        navManager.NavigateTo($"/vehicleview/{plate}");
+    }
+
+    private void ViewIncident(string identifier, int incidentId)
+    {
+        navManager.NavigateTo($"/incidentview/{identifier}/{incidentId}");
+    }
+
+
+    private async Task AddArrestWarrant(ArrestWarrantClass newArrestWarrant)
+    {
+       var parameters = new DialogParameters
+        {
+            { nameof(ArrestWarrantDialog.NewArrestWarrant), newArrestWarrant },
+            { nameof(ArrestWarrantDialog.identifier), identifier },
+            { nameof(ArrestWarrantDialog.Person), person },
+            { nameof(ArrestWarrantDialog.IsViewOnly), false }
+        };
+
+        var dialog = await DialogService.ShowAsync<ArrestWarrantDialog>("Arrestatiebevel Toevoegen", parameters);
+        var result = await dialog.Result;
+    }
+
+
+
+    private async Task ViewArrestWarrant(int id)
+    {
+        var arrestWarrant = await Http.GetFromJsonAsync<ArrestWarrantClass>($"api/persons/{identifier}/arrestwarrants/{id}");
+        if (arrestWarrant == null)
+        {
+            ShowErrorSnackbar("Arrestatiebevel niet gevonden");
+            return;
+        }
+
+        var parameters = new DialogParameters
+        {
+            { nameof(ArrestWarrantDialog.NewArrestWarrant), arrestWarrant },
+            { nameof(ArrestWarrantDialog.identifier), identifier },
+            { nameof(ArrestWarrantDialog.Person), person },
+            { nameof(ArrestWarrantDialog.IsViewOnly), true }
+        };
+
+        var dialog = await DialogService.ShowAsync<ArrestWarrantDialog>($"Arrestatiebevel #{id}", parameters);
+        var result = await dialog.Result;
+    }
+
+    private async Task AddIncident(IncidentClass newIncident)
+    {
+       var parameters = new DialogParameters
+        {
+            { nameof(IncidentDialog.NewIncident), newIncident },
+            { nameof(IncidentDialog.identifier), identifier },
+            { nameof(IncidentDialog.Person), person }
+        };
+
+        var dialog = await DialogService.ShowAsync<IncidentDialog>("Incident Toevoegen", parameters);
+        var result = await dialog.Result;
+    }
+}

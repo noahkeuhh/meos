@@ -1,0 +1,3 @@
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\publish\Meos_Shared.dll
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\publish\Meos_Shared.deps.json
+C:\Users\noahb\OneDrive\Meos\Meos_Shared\bin\Release\net9.0\publish\Meos_Shared.pdb

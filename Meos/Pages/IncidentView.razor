@@ -1,0 +1,257 @@
+﻿@page "/incidentview/{identifier}/{incidentid:int}"
+@using Meos.Authentication
+@using Meos.Dialogs
+@using Meos_Shared
+@using MudBlazor.Charts
+
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+@inject NavigationManager navManager
+@inject IDialogService DialogService 
+
+    @if (isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" />
+    }
+    else
+    {
+        <MudContainer class="mt-9">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true">
+                    <MudCardContent>
+                        <MudText Align="Align.Center" Typo="Typo.body1"><b>Incident</b> #@incident.IncidentId</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Artikelen:</b> @incident.Artikelen</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Ingenomen Goederen:</b> @incident.IngenomenGoederen</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Rechten voorgelezen:</b> @incident.Rechten</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Agent:</b> @incident.Agent</MudText>
+                        <MudText class="mt-3" Typo="Typo.body2"><b>Aangemaakt op:</b> @incident.Datum</MudText>
+                    </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudCard>       
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <MudContainer class="mt-9">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1"><b>Defenitieve Straf</b></MudText>
+                            @foreach (var sentence in sentences)
+                            {
+                                <MudText Class="mt-3" Typo="Typo.body2"><b>Type:</b> @sentence.Type</MudText>
+                                <MudText Class="mt-3" Typo="Typo.body2"><b>Aantal:</b> @sentence.Amount</MudText>
+                                <MudText Class="mt-3" Typo="Typo.body2"><b>Boete:</b> €@sentence.Fine</MudText>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (isDone == false)
+                            {
+                                <MudButton OnClick="@((e) => AddSentence(NewSentence))" Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">Toevoegen</MudButton>
+                                <MudStack Row="true" Justify="Justify.FlexEnd">                   
+                                    <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" @onclick="IsDone">Finaliseer Afhandeling</MudButton>
+                                </MudStack>  
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudText Align="Align.Center" Typo="Typo.body1"><b>Betrokken Collega's</b></MudText>
+                            @if (users != null && users.Any())
+                            {
+                                foreach (var user in users)
+                                {
+                                <MudItem xs="12" sm="6" md="4">
+                                    <MudCard Outlined="true" class="cursor-pointer mt-3">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.body2" Align="Align.Center"><b>@user.Name</b></MudText>
+                                            <MudText Class="mt-3" Typo="Typo.body2" Align="Align.Center"><b>Rang:</b> @user.Rang</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                                }
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (isDone == false)
+                            {
+                                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" OnClick="AddUser">Toevoegen</MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <MudContainer class="mt-9">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1"><b>Proces Verbaal (PV)</b></MudText>
+                        </MudCardContent>
+                        <MudCardActions>
+                            @if (isDone == false)
+                            {
+                                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">Toevoegen</MudButton>
+                            }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+
+        <MudContainer class="mt-9">
+            <MudGrid>
+                <MudItem xs="12" md="8">
+                    <MudCard Outlined="true">
+                        <MudCardContent>
+                            <MudText Typo="Typo.body1"><b>Notitie's</b></MudText>
+                            <MudTextField @bind-Value="NewNote.Note" Class="mt-3" T="string" Label="Notitie" Lines="6" Variant="Variant.Outlined" FullWidth="true"></MudTextField>
+                        </MudCardContent>
+                        <MudCardActions>
+                        @if (isDone == false)
+                        {
+                            <MudButton @onclick="AddNote" Class="mt-5" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary">Toevoegen</MudButton>
+                        }
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    }
+
+@code {
+    [Parameter]
+    public string? identifier { get; set; }
+    [Parameter]
+    public int incidentId { get; set; }
+    private IncidentClass? incident;
+    private bool isLoading = true;
+    private IncidentNoteClass NewNote { get; set; } = new IncidentNoteClass();
+    private List<IncidentNoteClass>? notes;
+    private List<UsersClass>? users;
+    private List<SentenceClass>? sentences;
+    private SentenceClass NewSentence {get; set;} = new SentenceClass();
+    private UsersClass NewUser  {get; set; } = new UsersClass();
+    private bool isDone = false;
+    
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        
+        try
+        {
+            incident = await Http.GetFromJsonAsync<IncidentClass>($"/api/persons/{identifier}/incidents/{incidentId}");
+            notes = await Http.GetFromJsonAsync<List<IncidentNoteClass>>($"/api/persons/{identifier}/incidents/{incidentId}/notes");
+            users = await Http.GetFromJsonAsync<List<UsersClass>>($"/api/persons/{identifier}/incidents/{incidentId}/users");
+            sentences = await Http.GetFromJsonAsync<List<SentenceClass>>($"/api/persons/{identifier}/incidents/{incidentId}/sentence");
+
+
+            if (notes != null && notes.Any())
+            {
+                NewNote.Note = notes.First().Note;
+            }
+        }
+        catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            ShowErrorSnackbar("Incident niet gevonden.");
+            return;
+        }   
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AddNote()
+    {
+        if (string.IsNullOrWhiteSpace(NewNote.Note))
+        {
+            ShowErrorSnackbar("Text veld is leeg");
+            return;
+        }
+
+        try
+        {
+            NewNote.IncidentId = incidentId;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/persons/{identifier}/incidents/{incidentId}/notes")
+            {
+                Content = JsonContent.Create(NewNote)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowSuccesSnackbar("De notitie is succesvol toegevoegd");
+                navManager.NavigateTo(navManager.Uri, forceLoad: true );
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen notitie: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+        
+    }
+
+    private async Task AddUser()
+        {
+        var parameters = new DialogParameters
+        {
+            { nameof(UsersDialog.incidentid), incidentId },
+            { nameof(UsersDialog.identifier), identifier }
+        };
+
+        var dialog = await DialogService.ShowAsync<UsersDialog>("Collega Toevoegen", parameters);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is List<int> selectedUserIds && selectedUserIds.Any())
+        {
+            users = await Http.GetFromJsonAsync<List<UsersClass>>(
+            $"/api/persons/{identifier}/incidents/{incidentId}/users");
+
+            Snackbar.Add("Collega's succesvol toegevoegd!", Severity.Success);
+        }
+    }
+
+    private async Task AddSentence(SentenceClass newSentence)
+    {
+       var parameters = new DialogParameters
+        {
+            { nameof(SentenceDialog.newSentence), newSentence },
+            { nameof(SentenceDialog.identifier), identifier },
+            { nameof(SentenceDialog.incidentid), incidentId },
+        };
+
+        var dialog = await DialogService.ShowAsync<SentenceDialog>("Straf Toevoegen", parameters);
+        var result = await dialog.Result;
+    }
+
+    private void IsDone()
+    {
+        isDone = true;
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+}

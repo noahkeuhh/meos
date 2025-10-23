@@ -1,0 +1,120 @@
+﻿@inject ISnackbar Snackbar
+@using Meos.Pages
+@using Meos_Shared
+@using MudBlazor;
+@using System.Threading.Tasks
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider authStateProvider
+@inject HttpClient Http
+@inject NavigationManager navManager
+
+<MudDialog>
+    <TitleContent>
+        <MudText Align="Align.Center" Typo="Typo.h6">
+            Arrestatiebevel 
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField class="mt-3" Value="@($"{Person.FirstName} {Person.LastName}")"  Label="Persoon" ReadOnly="true"/>
+        <MudTextField class="mt-3" @bind-Value="NewArrestWarrant.Agent" Label="Agent"/>
+        <MudTextField class="mt-3" @bind-Value="NewArrestWarrant.Message" Variant="Variant.Outlined" Lines="10" Label="Omschrijving"/>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Size="Size.Small" Color="Color.Tertiary" OnClick="AddArrestWarrant">Arrestatiebevel Toevoegen</MudButton>
+        }
+        else
+        {
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                    <MudButton Size="Size.Small" Color="Color.Error" OnClick="@(() => DeleteArrestWarrant(NewArrestWarrant.Id))">Verwijderen</MudButton>
+                </Authorized>
+            </AuthorizeView>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public ArrestWarrantClass NewArrestWarrant { get; set; } = new ArrestWarrantClass();
+    [Parameter]
+    public string? identifier {get; set; }
+    [Parameter]
+    public PersonClass? Person {get; set; }
+    [Parameter]
+    public bool IsViewOnly { get; set; } = false; 
+
+    
+    protected override void OnInitialized()
+    {
+        if (NewArrestWarrant.Date == default)
+        {
+            NewArrestWarrant.Date = DateTime.Now;
+        }
+    }
+
+    private void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task AddArrestWarrant()
+    {
+        try
+        {
+            NewArrestWarrant.Identifier = identifier;
+
+            var request = new HttpRequestMessage(HttpMethod.Post, $"api/persons/{identifier}/arrestwarrants")
+            {
+                Content = JsonContent.Create(NewArrestWarrant)
+            };
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                ShowSuccesSnackbar("Het arrestatiebevel is succesvol toegevoegd");
+                MudDialog.Close(DialogResult.Ok(NewArrestWarrant.Id));
+            }
+            else
+            {
+                ShowErrorSnackbar($"Fout bij toevoegen arrestatiebevel: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowErrorSnackbar("Er is een fout opgetreden: " + ex.Message);
+        }
+    }
+
+    private async Task DeleteArrestWarrant(int id)
+    {
+        var response = await Http.DeleteAsync($"api/persons/{identifier}/arrestwarrants/{id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            ShowSuccesSnackbar("Het arrestatiebevel is succesvol verwijderd.");
+            MudDialog.Close(DialogResult.Ok(NewArrestWarrant.Id));
+            navManager.NavigateTo(navManager.Uri, forceLoad: true);
+        }
+        else
+        {   
+            ShowErrorSnackbar("Er is een fout opgetreden. Kon het arrestatiebevel niet verwijderen.");
+        }
+    }
+
+    private void ShowErrorSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Error);
+    }
+
+    private void ShowSuccesSnackbar(string message)
+    {
+        Snackbar.Add(message, Severity.Success);
+    }
+}

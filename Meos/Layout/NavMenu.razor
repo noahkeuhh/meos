@@ -1,0 +1,20 @@
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using System.Runtime.CompilerServices
+
+<MudNavMenu>
+    <AuthorizeView Roles="Administrator,User">
+                <Authorized>
+                     <MudNavLink Href="person" Icon="@Icons.Material.Filled.Person">
+                        Personen
+                    </MudNavLink>
+                     <MudNavLink Href="vehicle" Icon="@Icons.Material.Filled.DirectionsCar">
+                        Voertuigen
+                    </MudNavLink>
+                </Authorized>
+            </AuthorizeView>
+
+            <AuthorizeView Roles="Administrator">
+                <Authorized>
+                </Authorized>
+            </AuthorizeView>
+</MudNavMenu>
